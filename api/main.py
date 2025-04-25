@@ -3,7 +3,10 @@ import yt_dlp
 import boto3
 import os
 
+# Criando instância FastAPI
 app = FastAPI()
+
+# Configuração do S3
 s3 = boto3.client('s3')
 bucket_name = 'gptvideosbaile'  # Seu bucket S3
 
