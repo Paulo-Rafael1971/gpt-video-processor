@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Testador do Baile</title>
+</head>
+<body>
+  <h1>Testar Análise de Vídeo 🎥</h1>
+  <input type="text" id="videoUrl" placeholder="Cole a URL do YouTube aqui" size="50">
+  <button onclick="enviar()">Enviar para análise</button>
+  <pre id="resposta"></pre>
+
+  <script>
+    async function enviar() {
+      const url = document.getElementById('videoUrl').value;
+      const resposta = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ video_url: url })
+      });
+      const dados = await resposta.json();
+      document.getElementById('resposta').textContent = JSON.stringify(dados, null, 2);
+    }
+  </script>
+</body>
+</html>
