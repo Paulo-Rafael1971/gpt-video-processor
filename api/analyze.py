@@ -5,6 +5,11 @@ import os
 
 def handler(event, context):
     try:
+        print("Iniciando a função.")
+        
+        # Log do evento recebido
+        print(f"Evento recebido: {event}")
+
         # Espera-se que o corpo da requisição contenha a URL do vídeo
         body = json.loads(event['body'])
         video_url = body['video_url']
@@ -16,9 +21,12 @@ def handler(event, context):
             print(f"Iniciando o download do vídeo: {video_url}")
             ydl.download([video_url])
 
+        # Log do status após download
+        print("Download concluído.")
+
         # Upload para o S3
         s3 = boto3.client('s3')
-        bucket_name = os.environ.get('AWS_S3_BUCKET_NAME', 'gptvideosbaile')  # Garantir que o nome do bucket esteja correto
+        bucket_name = os.environ.get('AWS_S3_BUCKET_NAME', 'gptvideosbaile')
         object_key = 'videos/video.mp4'
 
         print(f"Enviando para o S3: {bucket_name}/{object_key}")
