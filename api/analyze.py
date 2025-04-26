@@ -4,37 +4,55 @@ import boto3
 import os
 
 def handler(event, context):
+    print("🔵 Início da função analyze")
+
     try:
-        print("Iniciando a função.")
-        
-        # Log do evento recebido
-        print(f"Evento recebido: {event}")
+        print(f"📝 Evento recebido: {event}")
 
-        # Espera-se que o corpo da requisição contenha a URL do vídeo
+        if 'body' not in event:
+            raise ValueError("❌ Nenhum body recebido na requisição!")
+
         body = json.loads(event['body'])
+        print(f"📦 Body decodificado: {body}")
+
+        if 'video_url' not in body:
+            raise ValueError("❌ Campo 'video_url' não encontrado no body!")
+
         video_url = body['video_url']
-        print(f"Recebendo URL do vídeo: {video_url}")
+        print(f"🎬 URL do vídeo: {video_url}")
 
-        # Configuração do yt_dlp para download do vídeo
-        ydl_opts = {'outtmpl': '/tmp/video.mp4'}
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            print(f"Iniciando o download do vídeo: {video_url}")
-            ydl.download([video_url])
+        # Download do vídeo
+        try:
+            ydl_opts = {'outtmpl': '/tmp/video.mp4'}
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                print(f"⬇️ Baixando vídeo...")
+                ydl.download([video_url])
+            print(f"✅ Download concluído.")
+        except Exception as download_error:
+            print(f"❌ Erro ao baixar vídeo: {str(download_error)}")
+            raise download_error
 
-        # Log do status após download
-        print("Download concluído.")
+        # Upload para S3
+        try:
+            print(f"🛫 Iniciando upload para S3...")
+            s3 = boto3.client('s3')
+            bucket_name = os.environ.get('AWS_S3_BUCKET_NAME', 'gptvideosbaile')
+            object_key = 'videos/video.mp4'
 
-        # Upload para o S3
-        s3 = boto3.client('s3')
-        bucket_name = os.environ.get('AWS_S3_BUCKET_NAME', 'gptvideosbaile')
-        object_key = 'videos/video.mp4'
-
-        print(f"Enviando para o S3: {bucket_name}/{object_key}")
-        s3.upload_file('/tmp/video.mp4', bucket_name, object_key)
+            s3.upload_file('/tmp/video.mp4', bucket_name, object_key)
+            print(f"✅ Upload para S3 feito.")
+        except Exception as s3_error:
+            print(f"❌ Erro ao fazer upload para S3: {str(s3_error)}")
+            raise s3_error
 
         # Gerar URL temporária
-        print(f"Gerando URL temporária")
-        url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': object_key}, ExpiresIn=3600)
+        try:
+            print(f"🔗 Gerando URL temporária...")
+            url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': object_key}, ExpiresIn=3600)
+            print(f"✅ URL gerada: {url}")
+        except Exception as url_error:
+            print(f"❌ Erro ao gerar URL temporária: {str(url_error)}")
+            raise url_error
 
         return {
             "statusCode": 200,
@@ -42,7 +60,7 @@ def handler(event, context):
         }
 
     except Exception as e:
-        print(f"Erro: {str(e)}")
+        print(f"🚨 Erro final detectado: {str(e)}")
         return {
             "statusCode": 500,
             "body": json.dumps({"error": str(e)})
