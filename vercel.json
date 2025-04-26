@@ -1,16 +1,16 @@
 {
-  "version": 2,
-  "builds": [
+  "crons": [
     {
-      "src": "api/analyze.py",
-      "use": "@vercel/python",
-      "runtime": "python3.9"
-    }
-  ],
-  "routes": [
+      "path": "/api/every-minute",
+      "schedule": "* * * * *"
+    },
     {
-      "src": "/api/analyze",
-      "dest": "api/analyze.py"
+      "path": "/api/every-hour",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/every-day",
+      "schedule": "0 0 * * *"
     }
   ]
 }
