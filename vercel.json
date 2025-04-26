@@ -4,7 +4,7 @@
     {
       "src": "api/analyze.py",
       "use": "@vercel/python",
-      "runtime": "python3.8"
+      "runtime": "python3.7"
     }
   ],
   "routes": [
