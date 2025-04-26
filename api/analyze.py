@@ -1,41 +1,30 @@
 from fastapi import FastAPI
-import yt_dlp, boto3, os
+import yt_dlp
+import boto3
+import os
 
 app = FastAPI()
 
-# Cliente S3 usando variáveis de ambiente
-s3 = boto3.client(
-    "s3",
-    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-)
-BUCKET = os.getenv("S3_BUCKET", "gptvideosbaile")
+# Configuração do S3
+s3 = boto3.client('s3')
+bucket_name = 'gptvideosbaile'  # Substitua pelo seu nome de bucket
 
-# Health-check em /
-@app.get("/")
-def health():
-    return {"status":"alive"}
-
-# Seu endpoint principal
 @app.post("/analyze")
 def analyze(payload: dict):
-    video_url = payload.get("video_url")
-    if not video_url:
-        return {"error":"payload precisa de video_url"}
-
-    # 1) Baixar vídeo para /tmp/video.mp4
-    ydl_opts = {"outtmpl":"/tmp/video.mp4"}
+    video_url = payload['video_url']
+    
+    # Baixar o vídeo
+    ydl_opts = {'outtmpl': '/tmp/video.mp4'}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
 
-    # 2) Enviar ao S3
-    key = f"videos/{os.path.basename('/tmp/video.mp4')}"
-    s3.upload_file("/tmp/video.mp4", BUCKET, key)
+    # Upload para o S3
+    file_name = '/tmp/video.mp4'
+    object_key = f"videos/{os.path.basename(file_name)}"
+    s3.upload_file(file_name, bucket_name, object_key)
 
-    # 3) Gerar link pré-assinado
-    url = s3.generate_presigned_url(
-        "get_object",
-        Params={"Bucket":BUCKET,"Key":key},
-        ExpiresIn=3600
-    )
-    return {"url":url}
+    # Gerar URL pré-assinada
+    url = s3.generate_presigned_url('get_object',
+                                   Params={'Bucket': bucket_name, 'Key': object_key},
+                                   ExpiresIn=3600)
+    return {"url": url}
