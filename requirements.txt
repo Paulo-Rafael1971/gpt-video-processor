@@ -1,4 +1,0 @@
-fastapi
-yt_dlp
-boto3
-uvicorn[standard]
