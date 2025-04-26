@@ -3,9 +3,10 @@ import yt_dlp
 import boto3
 import os
 
-def handler(request):
+def handler(event, context):
     try:
-        body = request.get_json()
+        # Expecting JSON body from the POST request
+        body = json.loads(event['body'])
         video_url = body['video_url']
         print(f"Recebendo URL do vídeo: {video_url}")
 
@@ -14,8 +15,9 @@ def handler(request):
             print(f"Iniciando o download do vídeo: {video_url}")
             ydl.download([video_url])
 
+        # Upload to S3
         s3 = boto3.client('s3')
-        bucket_name = 'gptvideosbaile'
+        bucket_name = os.environ.get('AWS_S3_BUCKET_NAME', 'gptvideosbaile')
         object_key = 'videos/video.mp4'
 
         print(f"Enviando para o S3: {bucket_name}/{object_key}")
