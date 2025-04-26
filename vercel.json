@@ -4,9 +4,7 @@
     {
       "src": "api/analyze.py",
       "use": "@vercel/python",
-      "config": {
-        "pythonVersion": "3.9"
-      }
+      "runtime": "python3.9"  // Adicione a versão do Python que você quer usar
     }
   ],
   "routes": [
